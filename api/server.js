@@ -1,12 +1,15 @@
 var express = require('express')
 var bodyParser = require('body-parser')
 var mongodb = require('mongodb')
+var multipart = require('connect-multiparty')
 var objectId = require('mongodb').ObjectId
+var fs = require('fs')
 
 var app = express()
 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
+app.use(multipart())
 
 var port = 3333
 
@@ -29,20 +32,42 @@ app.get('/', function(req, res){
 
 // POST (create)
 app.post('/api',function(req, res){
-  var dados = req.body
 
-  db.open(function(err, mongoClient){
-    mongoClient.collection('postagens',function(err, collection){
-      collection.insert(dados, function(err, result){
-        if(err){
-          res.status(500).json(err)
-        }else{
-          res.status(200).json(result)
-        }
-        mongoClient.close()
+  var date = new Date()
+  var time_stamp = date.getTime()
+
+  res.setHeader('Access-Control-Allow-Origin', '*')
+
+  var url_imagem = time_stamp + '_' + req.files.arquivo.originalFilename
+
+  var originPath = req.files.arquivo.path
+  var destiny = './uploads/' + url_imagem
+
+  fs.rename(originPath, destiny, function(err){
+    if(err){
+      res.status(500).json({erro:err})
+      return
+    }
+
+    var dados = {
+      url_imagem: url_imagem,
+      titulo: req.body.titulo
+    }
+    
+    db.open(function(err, mongoClient){
+      mongoClient.collection('postagens',function(err, collection){
+        collection.insert(dados, function(err, result){
+          if(err){
+            res.status(500).json(err)
+          }else{
+            res.json({'status': 'inclusão realizada com sucesso'})
+          }
+          mongoClient.close()
+        })
       })
     })
   })
+  
 })
 //GET (read)
 app.get('/api',function(req, res){
