@@ -52,21 +52,20 @@ body{
 	border:solid 1px #EFEFEF;
 	margin-bottom:50px;
 	text-align: center;
+	padding: 0.5rem;
 }
 
 .publicacao .titulo{
-	background-color: #FFF;
-	padding-left:30px;
-	padding-top:15px;
-	padding-bottom:15px;
+	padding:1rem;
 	display:block;
 	font-weight: bold;
 	text-align: left;
+	text-transform: uppercase;
 }
 
 .publicacao img{
-	border-top:solid 1px #EFEFEF;
-	border-bottom:solid 1px #EFEFEF;
+	width: 100%;
+	height: auto;
 }
 
 .comentar{
@@ -82,19 +81,19 @@ body{
 }
 
 .comentarios{
-	text-align: left;
-	padding:20px;
+	text-align: left;	
 	background:#FFF;
-	border-bottom: solid 1px #EFEFEF;
 }
 
 .txt_comentario{
 	display: block;
 	width:100%;
+	padding:1rem;
 }
 
 .btn_remover_postagem{
+	float: right;
+	border: none;
 	text-decoration: none;
-	color: #c2c2c2;
-	border:none;
+	color: #da4040;
 }

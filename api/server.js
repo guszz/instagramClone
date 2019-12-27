@@ -11,6 +11,16 @@ app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 app.use(multipart())
 
+app.use(function(req, res, next){
+
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-type')
+  res.setHeader('Access-Control-Allow-Credentials', true)
+
+  next()
+})
+
 var port = 3333
 
 app.listen(port)
@@ -35,8 +45,6 @@ app.post('/api',function(req, res){
 
   var date = new Date()
   var time_stamp = date.getTime()
-
-  res.setHeader('Access-Control-Allow-Origin', '*')
 
   var url_imagem = time_stamp + '_' + req.files.arquivo.originalFilename
 
@@ -69,8 +77,10 @@ app.post('/api',function(req, res){
   })
   
 })
+
 //GET (read)
 app.get('/api',function(req, res){
+
   db.open(function(err, mongoClient){
     mongoClient.collection('postagens',function(err, collection){
       collection.find().toArray(function(err, result){
@@ -101,14 +111,37 @@ app.get('/api/:id',function(req, res){
   })
 })
 
-//PUT by ID (read)
+//GET imagem (read)
+app.get('/imagens/:imagem', function(req, res){
+  var img = req.params.imagem
+
+  fs.readFile('./uploads/'+img, function(err, content){
+    if(err){
+      res.status(400).json(err)
+      return
+    }
+    res.writeHead(200, {
+      'Content-type' : 'image/jpeg',
+      'Content-type' : 'image/bmp',
+      'Content-type' : 'image/png',
+      'Content-type' : 'image/gif'
+    })
+    res.end(content)
+  })
+})
+
+//PUT by ID (update)
 app.put('/api/:id',function(req, res){
+
   db.open(function(err, mongoClient){
     mongoClient.collection('postagens',function(err, collection){
       collection.update(
         {_id : objectId(req.params.id)},
-        {$set: {
-          titulo: req.body.titulo,
+        {$push: {
+          comentarios: {
+            id_comentario: new objectId(),
+            comentario: req.body.comentario
+          }
         }},
         {},
         function(err, result){
@@ -122,18 +155,29 @@ app.put('/api/:id',function(req, res){
       )
     })
   })
+
 })
 
-//DELETE by ID (delete)
+//DELETE by ID do comentario (delete)
 app.delete('/api/:id',function(req, res){
+
   db.open(function(err, mongoClient){
     mongoClient.collection('postagens',function(err, collection){
-      collection.remove({_id : objectId(req.params.id)}, function(err, result){
-        if(err){
-          res.status(400).json(err)
-        }else{
-          res.status(200).json(result)
-        }
+      collection.update(
+        {},
+        {$pull: {
+          comentarios: {
+            id_comentario: objectId(req.params.id),
+          }
+        }},
+        {multi: true},
+        
+        function(err, result){
+          if(err){
+            res.status(400).json(err)
+          }else{
+            res.status(200).json(result)
+          }
         mongoClient.close()
       })
     })
